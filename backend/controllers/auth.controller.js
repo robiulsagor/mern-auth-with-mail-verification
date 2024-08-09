@@ -41,3 +41,46 @@ export const signup = async (req, res) => {
     res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
+
+export const signin = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new Error("All fields are required");
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const isValidPassword = await bcryptjs.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    generateTokenAndSetupCookie(res, user);
+
+    const { password: pass, ...userData } = user._doc;
+
+    return res.status(201).json({
+      success: true,
+      userData,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
+  }
+};
+
+export const signout = async (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ success: true, message: "Logged out successfully" });
+};
