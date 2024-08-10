@@ -1,5 +1,12 @@
 import bcryptjs from "bcryptjs";
-import { sendVerificationMail, sendWelcomeMail } from "../mailtrap/email.js";
+import crypto from "crypto";
+
+import {
+  sendForgotPasswordMail,
+  sendPasswordResetSuccessMail,
+  sendVerificationMail,
+  sendWelcomeMail,
+} from "../mailtrap/email.js";
 import { User } from "../models/user.model.js";
 import { generateTokenAndSetupCookie } from "../utils/generateTokenAndSetupCookie.js";
 
@@ -121,5 +128,80 @@ export const verifyEmail = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: "Something went wrong" });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiresAt = resetTokenExpiresAt;
+
+    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
+    await sendForgotPasswordMail(user.email, resetURL);
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset link sent to your email",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong resetting password!",
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { resetToken } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: resetToken,
+      resetPasswordExpiresAt: { $gt: Date.now() },
+    });
+
+    // if token is not valid
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    await user.save();
+
+    await sendPasswordResetSuccessMail(user.email);
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error reseting password!",
+    });
   }
 };

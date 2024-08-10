@@ -3,7 +3,7 @@ import express from "express";
 const app = express();
 
 import { connectDB } from "./dbConnect/connect.js";
-import authRoute from "./routes/autth.route.js";
+import authRoute from "./routes/auth.route.js";
 
 dotenv.config();
 

@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  forgotPassword,
+  resetPassword,
   signin,
   signout,
   signup,
@@ -16,5 +18,7 @@ router.post("/signin", signin);
 router.get("/signout", signout);
 
 router.post("/verify-email", verifyEmail);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:resetToken", resetPassword);
 
 export default router;
