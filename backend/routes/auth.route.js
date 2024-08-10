@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  checkAuth,
   forgotPassword,
   resetPassword,
   signin,
@@ -7,12 +8,12 @@ import {
   signup,
   verifyEmail,
 } from "../controllers/auth.controller.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.send("Auth route");
-});
+router.get("/check-auth", verifyToken, checkAuth);
+
 router.post("/signup", signup);
 router.post("/signin", signin);
 router.get("/signout", signout);

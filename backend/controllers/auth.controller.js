@@ -10,6 +10,10 @@ import {
 import { User } from "../models/user.model.js";
 import { generateTokenAndSetupCookie } from "../utils/generateTokenAndSetupCookie.js";
 
+export const checkAuth = async (req, res) => {
+  res.send(req.userId);
+};
+
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -76,7 +80,7 @@ export const signin = async (req, res) => {
       });
     }
 
-    generateTokenAndSetupCookie(res, user);
+    generateTokenAndSetupCookie(res, user._id);
 
     const { password: pass, ...userData } = user._doc;
 
@@ -193,7 +197,7 @@ export const resetPassword = async (req, res) => {
 
     await sendPasswordResetSuccessMail(user.email);
 
-    res.status(200).json({
+    res.clearCookie("token").status(200).json({
       success: true,
       message: "Password reset successfully",
     });
