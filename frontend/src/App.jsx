@@ -1,6 +1,10 @@
 // import "./App.css";
 
+import { Route, Routes } from "react-router-dom";
 import FloatingShape from "./components/FloatingShape";
+import Home from "./pages/Home";
+import SignIn from "./pages/SignIn";
+import Signup from "./pages/Signup";
 
 function App() {
   return (
@@ -30,6 +34,13 @@ function App() {
         duration="20"
       />
       {/* three floating shapes */}
+
+      {/* Routes */}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/signin" element={<SignIn />} />
+      </Routes>
     </div>
   );
 }
